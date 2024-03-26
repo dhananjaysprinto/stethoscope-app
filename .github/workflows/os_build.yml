@@ -56,6 +56,7 @@ jobs:
     if: ${{ github.event.inputs.build_type == 'all' || github.event.inputs.build_type == 'ubuntu' }}
     outputs: 
       version_number: ${{ steps.extract_version.outputs.version}}
+      test: 4
     runs-on: ubuntu-latest
     
     steps:
@@ -169,7 +170,7 @@ jobs:
         run: |
             mkdir artifacts && \
             cp dist/*.{yml,AppImage} artifacts/ && \
-            aws s3 sync artifacts s3://drsprinto-build/${{ needs.build-and-package-ubuntu.outputs.version}}/ 
+            aws s3 sync artifacts s3://drsprinto-build/${{ needs.build-and-package-ubuntu.outputs.test }}/ 
             
   upload-to-s3-windows:
     if: ${{ github.event.inputs.build_type == 'all' || github.event.inputs.build_type == 'windows' }} 
