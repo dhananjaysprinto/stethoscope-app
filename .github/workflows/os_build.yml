@@ -111,7 +111,7 @@ jobs:
     if: ${{ github.event.inputs.build_type == 'all' || github.event.inputs.build_type == 'windows' }}
     outputs: 
       version_number: ${{ steps.extract_version.outputs.version}}
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     
     steps:
       - name: Checkout code
