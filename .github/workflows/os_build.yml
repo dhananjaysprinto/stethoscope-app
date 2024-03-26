@@ -15,6 +15,8 @@ on:
 jobs:
   build-and-package-macos:
     if: ${{ github.event.inputs.build_type == 'all' || github.event.inputs.build_type == 'macos' }}
+    outputs: 
+      version_number: ${{ steps.extract_version.outputs.version}}
     runs-on: macos-latest
     
     steps:
@@ -51,6 +53,10 @@ jobs:
         with:
           name: Dist-macos
           path: dist
+          
+      - name: Get version from package.json
+        id: extract_version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT  
   
   build-and-package-ubuntu:
     if: ${{ github.event.inputs.build_type == 'all' || github.event.inputs.build_type == 'ubuntu' }}
@@ -96,15 +102,15 @@ jobs:
         with:
           name: Dist-ubuntu
           path: dist
-          
+      
       - name: Get version from package.json
         id: extract_version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT  
-         
-      
 
   build-and-package-windows:
     if: ${{ github.event.inputs.build_type == 'all' || github.event.inputs.build_type == 'windows' }}
+    outputs: 
+      version_number: ${{ steps.extract_version.outputs.version}}
     runs-on: windows-latest
     
     steps:
@@ -141,6 +147,10 @@ jobs:
         with:
           name: Dist-windows
           path: dist
+          
+      - name: Get version from package.json
+        id: extract_version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT  
   
   upload-to-s3-ubuntu:
     if: ${{ github.event.inputs.build_type == 'all' || github.event.inputs.build_type == 'ubuntu' }} 
@@ -164,7 +174,7 @@ jobs:
           pattern: Dist-*
           merge-multiple: true
           
-
+      
       - name: Push artifacts to S3
         run: |
             mkdir artifacts && \
@@ -201,7 +211,7 @@ jobs:
         run: |
             mkdir artifacts && \
             cp dist/*.{yml,exe} artifacts/ && \
-            aws s3 sync artifacts s3://drsprinto-build/${{ steps.extract_version.outputs.version }}/ 
+            aws s3 sync artifacts s3://drsprinto-build/${{ needs.build-and-package-windows.outputs.version_number }}/ 
             
   upload-to-s3-macos:
     if: ${{ github.event.inputs.build_type == 'all' || github.event.inputs.build_type == 'macos' }} 
@@ -233,4 +243,4 @@ jobs:
         run: |
             mkdir artifacts && \
             cp dist/*.{yml,dmg} artifacts/ && \
-            aws s3 sync artifacts s3://drsprinto-build/${{ steps.extract_version.outputs.version }}/ 
+            aws s3 sync artifacts s3://drsprinto-build/${{ needs.build-and-package-macos.outputs.version_number }}/           
