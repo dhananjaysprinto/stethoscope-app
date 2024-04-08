@@ -112,7 +112,7 @@ jobs:
     if: ${{ github.event.inputs.build_type == 'all' || github.event.inputs.build_type == 'windows' }}
     outputs: 
       version_number: ${{ steps.extract_version.outputs.version}}
-    runs-on: macos-latest
+    runs-on: windows-latest
     
     steps:
       - name: Checkout code
@@ -149,6 +149,21 @@ jobs:
           name: Dist-windows
           path: dist
           
+      - name: Install Windows SDK
+        # uses: actions/checkout@v4
+        uses: GuillaumeFalourd/setup-windows10-sdk-action@v2
+        with:
+          sdk-version: 22621
+      
+      - name: Signing the executables
+        uses: DanaBear/code-sign-action@v4
+        with:
+          certificate: '${{ secrets.P12FILE }}'
+          password: '${{ secrets.PASSWORD }}'
+          certificatesha1: '${{ secrets.SHA1KEY }}'
+          folder: 'dist'
+          recursive: true
+      
       - name: Get version from package.json
         id: extract_version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT  
@@ -237,4 +252,4 @@ jobs:
         run: |
             mkdir artifacts && \
             cp dist/*.{yml,dmg} artifacts/ && \
-            aws s3 sync artifacts s3://drsprinto-build/${{ needs.build-and-package-macos.outputs.version_number }}/ 
+            aws s3 sync artifacts s3://drsprinto-build/${{ needs.build-and-package-macos.outputs.version_number }}/
